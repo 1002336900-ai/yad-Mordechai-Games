@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פסיפס השייכות - מכל העולם לישראל</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap');
+        
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            font-family: 'Assistant', sans-serif; background-color: #f8fafc;
+        }
+
+        #game-container {
+            position: relative; width: 100vw; height: 100vh;
+            background-image: url('https://images.unsplash.com/photo-1589519160732-57fc498494f8?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
+
+        .israel-point {
+            position: absolute; width: 22px; height: 22px; background: #ef4444;
+            border-radius: 50%; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+            z-index: 20; transform: translate(-50%, -50%); border: 3px solid white;
+            pointer-events: none;
+        }
+
+        .game-header {
+            position: absolute; top: 15px; width: 100%; text-align: center;
+            z-index: 5; pointer-events: none;
+        }
+        .header-content {
+            display: inline-block; background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px); padding: 10px 35px; border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .compact-ui {
+            position: absolute; bottom: 20px; right: 20px; z-index: 100;
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 18px;
+            width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;
+        }
+
+        .compact-ui.minimized { width: 50px; height: 50px; padding: 5px; border-radius: 50%; overflow: hidden; }
+        .ui-content { display: flex; flex-direction: column; gap: 10px; }
+        .minimized .ui-content { display: none; }
+
+        .toggle-btn {
+            position: absolute; top: -10px; left: -10px; background: #334155;
+            color: white; width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid white; z-index: 110;
+        }
+
+        .input-field {
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 8px;
+            padding: 10px; font-size: 14px; outline: none; text-align: right;
+        }
+
+        .btn-action {
+            background: #3b82f6; color: white; padding: 10px; border-radius: 8px;
+            font-weight: bold; cursor: pointer; text-align: center; transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.9; }
+
+        .admin-tools {
+            display: flex; gap: 5px; margin-top: 5px; border-top: 1px solid #e2e8f0; padding-top: 10px;
+        }
+        .btn-tool {
+            flex: 1; background: #f1f5f9; color: #475569; padding: 6px;
+            border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hint-text { font-size: 10px; color: #94a3b8; text-align: center; margin-top: 5px; }
+
+        #success-message {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 25px; border-radius: 20px; z-index: 200;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 4px solid #10b981; text-align: center;
+        }
+        
+        #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="game-header">
+        <div class="header-content">
+            <h1 class="text-2xl font-bold text-slate-800">פסיפס השייכות</h1>
+            <p class="text-sm text-blue-600 font-medium">סמנו מקום על המפה ומשכו קו לישראל</p>
+        </div>
+    </div>
+
+    <div id="israel-target" class="israel-point" style="top: 45%; left: 56%;"></div>
+
+    <canvas id="drawing-canvas"></canvas>
+
+    <div id="ui-box" class="compact-ui">
+        <div class="toggle-btn" onclick="toggleUI()">−</div>
+        <div class="ui-content">
+            <input type="text" id="student-name" class="input-field" placeholder="שם המשתתף/ת...">
+            <button class="btn-action" onclick="saveMap()">📸 שמירת פסיפס</button>
+            
+            <div class="admin-tools">
+                <button class="btn-tool" onclick="document.getElementById('file-input').click()">🖼️ החלפת רקע</button>
+                <button class="btn-tool" onclick="clearCanvas()">♻️ איפוס</button>
+            </div>
+            <input type="file" id="file-input" accept="image/*" onchange="handleBgUpload(this)">
+            <p class="hint-text"><b>ניהול:</b> Shift + לחיצה לשינוי מיקום הנקודה האדומה</p>
+        </div>
+    </div>
+</div>
+
+<div id="success-message">
+    <h2 class="text-2xl font-bold text-emerald-600 mb-2">נשמר!</h2>
+    <p class="text-slate-600">גם אתם חלק מהפסיפס הכיתתי.</p>
+</div>
+
+<script>
+    const canvas = document.getElementById('drawing-canvas');
+    const ctx = canvas.getContext('2d');
+    const studentInput = document.getElementById('student-name');
+    const israelTarget = document.getElementById('israel-target');
+    const container = document.getElementById('game-container');
+    const uiBox = document.getElementById('ui-box');
+    
+    let isDrawing = false, startPoint = null, currentPos = null, connections = [];
+
+    function toggleUI() { uiBox.classList.toggle('minimized'); }
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        redraw();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // העלאת רקע
+    function handleBgUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => container.style.backgroundImage = `url('${e.target.result}')`;
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.compact-ui')) return;
+        
+        // שינוי מיקום ישראל (Shift + Click)
+        if (e.shiftKey) {
+            const xP = (e.clientX / window.innerWidth) * 100;
+            const yP = (e.clientY / window.innerHeight) * 100;
+            israelTarget.style.left = xP + '%';
+            israelTarget.style.top = yP + '%';
+            redraw();
+            return;
+        }
+
+        if (!studentInput.value.trim()) {
+            studentInput.focus();
+            return;
+        }
+
+        isDrawing = true;
+        startPoint = { x: e.clientX, y: e.clientY, name: studentInput.value };
+        currentPos = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        currentPos = { x: e.clientX, y: e.clientY };
+        redraw();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        const rect = israelTarget.getBoundingClientRect();
+        const tx = rect.left + rect.width / 2;
+        const ty = rect.top + rect.height / 2;
+        
+        if (Math.hypot(e.clientX - tx, e.clientY - ty) < 65) {
+            connections.push({ from: { ...startPoint }, color: `hsl(${Math.random() * 360}, 75%, 50%)` });
+            showSuccess();
+            studentInput.value = "";
+        }
+        startPoint = null; currentPos = null; redraw();
+    });
+
+    function redraw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const rect = israelTarget.getBoundingClientRect();
+        const tx = rect.left + rect.width / 2;
+        const ty = rect.top + rect.height / 2;
+
+        connections.forEach(conn => drawArc(conn.from, {x: tx, y: ty}, conn.color, false));
+        if (isDrawing && startPoint && currentPos) {
+            drawArc(startPoint, currentPos, '#3b82f6', true);
+        }
+    }
+
+    function drawArc(from, to, color, isTemp) {
+        ctx.beginPath();
+        ctx.lineWidth = isTemp ? 1.5 : 3;
+        ctx.strokeStyle = color;
+        ctx.lineCap = 'round';
+        ctx.moveTo(from.x, from.y);
+        
+        const cpX = (from.x + to.x) / 2;
+        const cpY = Math.min(from.y, to.y) - 120;
+        ctx.quadraticCurveTo(cpX, cpY, to.x, to.y);
+        
+        if (isTemp) ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (!isTemp) {
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(from.x, from.y, 6, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+            
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.font = "bold 14px Assistant";
+            const txt = from.name;
+            const w = ctx.measureText(txt).width + 10;
+            ctx.fillRect(from.x - w/2, from.y - 35, w, 22);
+            ctx.fillStyle = color;
+            ctx.fillText(txt, from.x - w/2 + 5, from.y - 19);
+        }
+    }
+
+    function showSuccess() {
+        const m = document.getElementById('success-message');
+        m.style.display = 'block';
+        setTimeout(() => m.style.display = 'none', 1800);
+    }
+
+    function clearCanvas() { connections = []; redraw(); }
+
+    function saveMap() {
+        uiBox.style.display = 'none';
+        document.querySelector('.game-header').style.display = 'none';
+        html2canvas(container).then(c => {
+            const link = document.createElement('a');
+            link.download = 'פסיפס_השייכות_הכיתתי.png';
+            link.href = c.toDataURL();
+            link.click();
+            uiBox.style.display = 'block';
+            document.querySelector('.game-header').style.display = 'block';
+        });
+    }
+</script>
+</body>
+</html>
