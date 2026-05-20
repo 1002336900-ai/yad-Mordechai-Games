@@ -41,10 +41,10 @@
         
         .victory-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(9, 9, 11, 0.98); z-index: 200; flex-direction: column; justify-content: center; align-items: center; }
 
-        /* עיצוב כפתור הפעלה מחדש */
+        /* עיצוב משופר לכפתור ההפעלה מחדש */
         .restart-button {
-            margin-top: 25px;
-            padding: 12px 35px;
+            margin-top: 20px;
+            padding: 12px 40px;
             font-size: 1.4rem;
             font-weight: bold;
             color: #09090b;
@@ -53,7 +53,7 @@
             border-radius: 12px;
             cursor: pointer;
             transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
+            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
         }
         .restart-button:hover {
             transform: scale(1.05);
@@ -88,11 +88,11 @@
         </div>
 
         <div class="victory-screen" id="victoryScreen">
-            <h1 style="color: #facc15; font-size: 4rem; margin-bottom: 20px;">🎉 כל הכבוד! 🎉</h1>
-            <div style="width: 50vw; max-height: 60vh; border: 5px solid #facc15; border-radius: 20px; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+            <h1 style="color: #facc15; font-size: 3.5rem; margin-top: 10px; margin-bottom: 15px;">🎉 כל הכבוד! 🎉</h1>
+            <!-- גובה התיבה הותאם ל-42vh כדי לפנות מקום לכפתור -->
+            <div style="width: 45vw; max-height: 42vh; border: 5px solid #facc15; border-radius: 20px; overflow: hidden; display: flex; justify-content: center; align-items: center;">
                 <img src="images/picture14.png" style="width: 100%; height: auto; object-fit: contain;" alt="ניצחון">
             </div>
-            <!-- כפתור הפעלה מחדש ממוקם כאן, מתחת לתמונת הניצחון -->
             <button class="restart-button" onclick="restartGame()">הפעלה מחדש 🔄</button>
         </div>
     </div>
@@ -121,7 +121,7 @@
         function initGame() {
             const grid = document.getElementById('suitcasesGrid');
             if(!grid) return;
-            grid.innerHTML = ''; // ניקוי מקדים
+            grid.innerHTML = ''; 
             data.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'suitcase-card';
@@ -158,12 +158,10 @@
             }
         }
 
-        // פונקציה לאיפוס והפעלת המשחק מחדש בתוך החלון
         function restartGame() {
             window.location.reload();
         }
 
-        // הפעלה בטוחה רק לאחר טעינת הדף
         window.onload = function() {
             initGame();
         };
