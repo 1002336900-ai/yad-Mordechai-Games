@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" direction="rtl">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,28 +14,23 @@
         }
 
         * { box-sizing: border-box; user-select: none; }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: #ffffff; direction: rtl; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: #ffffff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
         .main-frame { width: 94vw; height: 92vh; background-image: radial-gradient(circle at center, #2a2a3c 0%, #11111a 100%); border: 6px solid #4b5563; border-radius: 30px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8); position: relative; }
         header { text-align: center; padding: 2vh; background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); }
         header h1 { margin: 0; font-size: 2.5rem; color: #f3f4f6; }
         .game-container { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5vw; padding: 1.5vw; }
         .suitcase-card { background: linear-gradient(135deg, #3f3f46 0%, #27272a 100%); border: 4px solid #52525b; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s; padding: 20px; }
         .suitcase-card:hover { transform: translateY(-5px); border-color: #a1a1aa; }
-        .suitcase-card.solved { border-color: #22c55e; background: linear-gradient(135deg, #14532d 0%, #052e16 100%); cursor: default; opacity: 0.6; }
+        .suitcase-card.solved { border-color: #22c55e; background: linear-gradient(135deg, #14532d 0%, #052e16 100%); cursor: default; opacity: 0.7; }
         .suitcase-icon { font-size: 3rem; margin-bottom: 5px; }
         .suitcase-label { font-size: 1.1rem; font-weight: bold; color: #e4e4e7; }
         
-        /* חלונית פופ-אפ שמכסה את המסך */
         .overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
-        
-        /* תוכן הפופ אפ - מוגבל בגובה כדי שלא יגלוש */
         .popup-content { background-color: #27272a; border: 5px solid #a1a1aa; border-radius: 20px; width: 85%; height: 90%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 25px; }
         
-        /* מיכל התמונה - תופס את רוב המקום */
         .popup-image-container { width: 100%; height: 65%; background-color: #18181b; border-radius: 10px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 2px solid #3f3f46; }
         .popup-image { max-width: 100%; max-height: 100%; object-fit: contain; }
         
-        /* סרגל כפתורי הבחירה בתוך הפופ אפ */
         .keys-container { width: 100%; background-color: #11111b; padding: 15px; display: flex; justify-content: center; gap: 1.5vw; border-radius: 12px; margin-top: 10px; }
         .key-button { padding: 1.5vh 3vw; font-size: 1.3rem; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; transition: transform 0.2s; }
         .key-button:hover { transform: scale(1.05); }
@@ -62,7 +57,7 @@
                     <img src="" id="currentImage" class="popup-image" alt="סיפור">
                 </div>
                 
-                <p style="font-size: 1.5rem; margin: 10px 0; font-weight: bold;">מהו המניע המתאים לתמונה זו?</p>
+                <p style="font-size: 1.5rem; margin: 10px 0; font-weight: bold; color: #ffffff;">מהו המניע המתאים לתמונה זו?</p>
                 
                 <div class="keys-container">
                     <button class="key-button key-btn-ציוני" onclick="checkAnswer('ציוני')">ציוני</button>
@@ -82,4 +77,70 @@
     </div>
 
     <script>
-        const data =
+        const data = [
+            { id: 1, type: "כלכלי", img: "images/picture1.png" },
+            { id: 2, type: "ציוני", img: "images/picture2.png" },
+            { id: 3, type: "דתי", img: "images/picture3.png" },
+            { id: 4, type: "ביטחוני", img: "images/picture4.png" },
+            { id: 5, type: "כלכלי", img: "images/picture5.png" },
+            { id: 6, type: "ביטחוני", img: "images/picture6.png" },
+            { id: 7, type: "ביטחוני", img: "images/picture7.png" },
+            { id: 8, type: "דתי", img: "images/picture8.png" },
+            { id: 9, type: "ציוני", img: "images/picture9.png" },
+            { id: 10, type: "ציוני", img: "images/picture10.png" },
+            { id: 11, type: "כלכלי", img: "images/picture11.png" },
+            { id: 12, type: "דתי", img: "images/picture12.png" },
+            { id: 13, type: "ציוני", img: "images/picture13.png" }
+        ];
+
+        let selectedSuitcase = null;
+        let selectedCardElement = null;
+        const solvedIDs = new Set();
+
+        function initGame() {
+            const grid = document.getElementById('suitcasesGrid');
+            if(!grid) return;
+            grid.innerHTML = ''; // ניקוי מקדים
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'suitcase-card';
+                card.id = 'card-' + item.id;
+                card.onclick = function() {
+                    if (solvedIDs.has(item.id)) return;
+                    selectedSuitcase = item;
+                    selectedCardElement = card;
+                    document.getElementById('currentImage').src = item.img;
+                    document.getElementById('popupOverlay').style.display = 'flex';
+                };
+                card.innerHTML = '<span class="suitcase-icon">🧳</span><span class="suitcase-label">מזוודה ' + (index + 1) + '</span>';
+                grid.appendChild(card);
+            });
+        }
+
+        function checkAnswer(chosenType) {
+            if (!selectedSuitcase) return;
+            if (selectedSuitcase.type === chosenType) {
+                solvedIDs.add(selectedSuitcase.id);
+                
+                if (selectedCardElement) {
+                    selectedCardElement.classList.add('solved');
+                    selectedCardElement.innerHTML = '<span class="suitcase-icon">✅</span><span class="suitcase-label">פוענחה!</span>';
+                }
+                
+                document.getElementById('popupOverlay').style.display = 'none';
+                
+                if (solvedIDs.size === data.length) {
+                    document.getElementById('victoryScreen').style.display = 'flex';
+                }
+            } else {
+                alert("נסו שוב! המניע הזה אינו מתאים לתמונה.");
+            }
+        }
+
+        // הפעלה בטוחה רק לאחר טעינת הדף
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>
