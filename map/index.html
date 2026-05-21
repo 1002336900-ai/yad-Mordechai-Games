@@ -16,7 +16,10 @@
 
         #game-container {
             position: relative; width: 100vw; height: 100vh;
-            background-image: url('https://images.unsplash.com/photo-1589519160732-57fc498494f8?q=80&w=2070&auto=format&fit=crop');
+            
+            /* --- עדכון: כאן מדביקים את הקישור הגולמי מגיטאהב --- */
+            background-image: url('YOUR_GITHUB_RAW_IMAGE_URL');
+            
             background-size: cover; background-position: center; background-repeat: no-repeat;
         }
 
@@ -249,7 +252,9 @@
     function saveMap() {
         uiBox.style.display = 'none';
         document.querySelector('.game-header').style.display = 'none';
-        html2canvas(container).then(c => {
+        
+        /* --- עדכון: הוספת useCORS: true כדי לאפשר צילום מסך תקין עם תמונת הרקע מגיטאהב --- */
+        html2canvas(container, { useCORS: true }).then(c => {
             const link = document.createElement('a');
             link.download = 'פסיפס_השייכות_הכיתתי.png';
             link.href = c.toDataURL();
