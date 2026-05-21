@@ -52,7 +52,13 @@
             width: 98%; 
             max-width: 1600px;
             margin: 0 auto;
-            background: rgba(120, 53, 15, 0.05);
+            
+            /* --- השינוי החדש: טעינת מפת העולם ישירות מגיטאהב --- */
+            background-image: url('YOUR_GITHUB_RAW_IMAGE_URL'); 
+            background-size: cover;       /* גורם לתמונת המפה להתפרס על כל הלוח */
+            background-position: center;  /* ממקם את המפה במרכז הלוח */
+            background-repeat: no-repeat; /* מונע שכפול של התמונה */
+            
             border-bottom: 12px solid #2d1606;
             display: flex;
             flex-wrap: wrap-reverse;
@@ -216,8 +222,7 @@
                 </div>
 
                 <div id="kotel" class="kotel-canvas">
-                    <!-- Stones will be added here -->
-                </div>
+                    </div>
 
                 <div class="footer-quote-wrapper">
                     <div class="footer-quote-box">
@@ -352,7 +357,12 @@
             const originalOverflow = wrapper.style.overflowY;
             wrapper.style.overflowY = 'visible';
             try {
-                const canvas = await html2canvas(captureArea, { scale: 2, backgroundColor: '#fdfaf3' });
+                /* --- השינוי השני: הוספת useCORS לאפשר צילום של תמונת רקע משרת מרוחק --- */
+                const canvas = await html2canvas(captureArea, { 
+                    scale: 2, 
+                    backgroundColor: '#fdfaf3',
+                    useCORS: true 
+                });
                 const link = document.createElement('a');
                 link.download = 'כותל_הערכים.png';
                 link.href = canvas.toDataURL();
