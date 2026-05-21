@@ -17,8 +17,8 @@
         #game-container {
             position: relative; width: 100vw; height: 100vh;
             
-            /* הקישור המעודכן והישיר למפה שלך בגיטאהב */
-            background-image: url('https://raw.githubusercontent.com/1002336900-ai/yad-mordechai-Games/main/map/image/map.draw.line');
+            /* הקישור המדויק והסופי למפה עם סיומת ה-png שראינו בצילום */
+            background-image: url('https://raw.githubusercontent.com/1002336900-ai/yad-mordechai-Games/main/map/image/map.draw.line.png');
             
             background-size: cover; background-position: center; background-repeat: no-repeat;
             background-color: #f1f5f9;
@@ -146,7 +146,6 @@
     canvas.addEventListener('mousedown', (e) => {
         if (e.target.closest('.compact-ui')) return;
         
-        // שינוי מיקום ישראל (Shift + Click)
         if (e.shiftKey) {
             const xP = (e.clientX / window.innerWidth) * 100;
             const yP = (e.clientY / window.innerHeight) * 100;
