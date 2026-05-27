@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* מניעת גלילה ושמירה על המסך נקי */
+        body { 
+            margin: 0; padding: 0; 
+            width: 100vw; height: 100vh; 
+            overflow: hidden; 
+            background: #fdf6e3; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        }
+        
+        /* אזור התוכן המרכזי - מרוחק מהקצוות */
+        .safe-zone {
+            width: 90vw; height: 75vh;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        .card { 
+            perspective: 1000px; cursor: pointer; 
+            width: 100%; max-width: 160px; height: 100%; max-height: 220px;
+            touch-action: manipulation;
+        }
+        .inner { 
+            position: relative; width: 100%; height: 100%; 
+            transition: transform 0.6s; transform-style: preserve-3d; 
+        }
+        .card.flipped .inner { transform: rotateY(180deg); }
+        
+        .front, .back { 
+            position: absolute; width: 100%; height: 100%; 
+            backface-visibility: hidden; border-radius: 16px; 
+            border: 3px solid #8b4513; display: flex; 
+            align-items: center; justify-content: center; 
+            background: white; box-shadow: 0 6px 10px rgba(0,0,0,0.15); 
+        }
+        .front { background: #d2b48c; color: white; font-weight: bold; font-size: 1.2rem; }
+        .back { transform: rotateY(180deg); padding: 8px; flex-direction: column; text-align: center; justify-content: space-between; overflow: hidden; }
+        
+        /* שיפור הטאץ' של התמונה */
+        img { object-fit: contain; width: 100%; height: 50%; background: #f9f9f9; border-radius: 8px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="safe-zone" id="grid"></div>
+
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-3xl max-w-lg w-full text-center border-8 border-amber-900 shadow-2xl">
+            <h2 id="modal-name" class="text-3xl font-bold mb-4 text-amber-900"></h2>
+            <p id="modal-bio" class="text-lg mb-6 leading-relaxed text-gray-700"></p>
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="bg-amber-900 text-white px-10 py-3 rounded-full text-lg font-bold">סגירה</button>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = "https://raw.githubusercontent.com/1002336900-ai/yad-Mordechai-Games/main/leaders/images/";
+        const leaders = [
+            { id: 1, name: "יצחק שדה", bio: "מפקד הפלמ\"ח הראשון וממייסדי צה\"ל, עיצב את ערכי הלחימה." },
+            { id: 4, name: "בבה אידלסון", bio: "חברת כנסת ומנהיגת פועלות, פעלה לקידום מעמד האישה וזכויות עובדים." },
+            { id: 5, name: "ברל כצנלסון", bio: "הוגה דעות מרכזי של תנועת העבודה, הקים מוסדות תרבות וחינוך." },
+            { id: 6, name: "יהושוע חנקין", bio: "פעיל ציוני שרכש קרקעות להתיישבות יהודית, במיוחד בעמק יזרעאל." },
+            { id: 12, name: "הרב עוזיאל", bio: "הראשון לציון והרב הראשי הספרדי הראשון, פעל לאחדות העם." },
+            { id: 15, name: "יגאל ידין", bio: "מפקד בצבא וחוקר עתיקות שלימד על ההיסטוריה של העם היהודי." },
+            { id: 16, name: "יוסף טרומפלדור", bio: "לוחם ומנהיג ציוני שהפך לסמל לגבורה בעקבות נפילתו בקרב על תל חי." },
+            { id: 17, name: "ישראל גלילי", bio: "ראש המפקדה הארצית של ה'הגנה' ושר בממשלה, תרם לעיצוב המדיניות הביטחונית." },
+            { id: 20, name: "פרץ ברנשטיין", bio: "ממנהיגי הליברלים, שר המסחר והתעשייה ומחותמי מגילת העצמאות." },
+            { id: 9, name: "דוד מרכוס", bio: "קצין אמריקאי יהודי שהתנדב לסייע במלחמת העצמאות והיה לאלוף הראשון בצה\"ל." }
+        ];
+
+        const grid = document.getElementById('grid');
+        
+        leaders.forEach(l => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // שימוש ב-HTML בנוי היטב
+            card.innerHTML = `
+                <div class="inner">
+                    <div class="front">מי אני?</div>
+                    <div class="back">
+                        <img src="${baseUrl}${l.id}.jpeg" onerror="this.src='https://placehold.co/100x100?text=תמונה'">
+                        <h3 class="font-bold text-xs truncate w-full px-1">${l.name}</h3>
+                        <button class="btn-action bg-amber-800 text-white px-4 py-2 rounded-lg text-sm mb-2 w-full">מה עשיתי?</button>
+                    </div>
+                </div>
+            `;
+            
+            // Flip logic
+            card.addEventListener('click', (e) => {
+                // מונע את הפיכת הכרטיס אם לחצו על הכפתור עצמו
+                if (!e.target.classList.contains('btn-action')) {
+                    card.classList.toggle('flipped');
+                }
+            });
+
+            // Button logic
+            card.querySelector('.btn-action').addEventListener('click', (e) => {
+                e.stopPropagation(); // מונע מהאירוע להגיע ל-Card ולהפוך אותו
+                document.getElementById('modal-name').innerText = l.name;
+                document.getElementById('modal-bio').innerText = l.bio;
+                document.getElementById('modal').classList.remove('hidden');
+            });
+            
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>
