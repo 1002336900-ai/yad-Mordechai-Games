@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #fdf6e3; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 900px; }
+        .card { width: 100%; height: 180px; perspective: 1000px; cursor: pointer; }
+        .inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; }
+        .card.flipped .inner { transform: rotateY(180deg); }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; border: 8px ridge #4a3728; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .front { background: linear-gradient(135deg, #1e40af, #1e3a8a); color: white; font-weight: bold; font-size: 1.2rem; }
+        .back { transform: rotateY(180deg); padding: 5px; flex-direction: column; text-align: center; justify-content: space-between; background: white; }
+        img { object-fit: contain; width: 100%; height: 90px; background: white; }
+    </style>
+</head>
+<body>
+    <div class="grid-container" id="grid"></div>
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full text-center border-4 border-blue-900 shadow-2xl">
+            <h2 id="modal-name" class="text-2xl font-bold mb-2"></h2>
+            <p id="modal-bio" class="text-sm mb-4 leading-relaxed"></p>
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="bg-blue-900 text-white px-6 py-2 rounded-full text-sm font-bold">סגירה</button>
+        </div>
+    </div>
+    <script>
+        const baseUrl = "https://raw.githubusercontent.com/1002336900-ai/yad-Mordechai-Games/main/leaders/images/";
+        
+        // כאן ביצעתי את התיקון: החלפתי בין השמות של גולדה (3) לאליעזר קפלן (7)
+        // כדי שיתאימו למה שאת רואה בפועל בתמונות שמועלות בגיטהאב
+        const leaders = [
+            { id: 8, name: "דוד בן גוריון", bio: "ראש הממשלה הראשון של ישראל ומכריז העצמאות." },
+            { id: 13, name: "חיים ויצמן", bio: "נשיאה הראשון של מדינת ישראל ומדען דגול." },
+            { id: 3, name: "אליעזר קפלן", bio: "שר האוצר הראשון של ישראל, בנה את התשתית הכלכלית של המדינה." },
+            { id: 19, name: "משה שרת", bio: "ראש הממשלה השני של ישראל ושר החוץ הראשון." },
+            { id: 18, name: "לוי אשכול", bio: "ראש הממשלה השלישי של ישראל, הוביל את המדינה במלחמת ששת הימים." },
+            { id: 7, name: "גולדה מאיר", bio: "ראש הממשלה האישה הראשונה של ישראל." },
+            { id: 16, name: "יוסף טרומפלדור", bio: "לוחם ומנהיג ציוני שהפך לסמל לגבורה בעקבות נפילתו בקרב על תל חי." }
+        ];
+
+        const grid = document.getElementById('grid');
+        leaders.forEach(l => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="inner"><div class="front">מי אני?</div><div class="back"><img src="${baseUrl}${l.id}.jpeg" onerror="this.src='https://placehold.co/100x100?text=תמונה'"><h3 class="font-bold text-xs truncate w-full">${l.name}</h3><button class="action-btn bg-blue-800 text-white px-2 py-1 rounded text-[10px] font-bold">מה עשיתי?</button></div></div>`;
+            card.onclick = () => card.classList.toggle('flipped');
+            card.querySelector('.action-btn').addEventListener('click', (e) => { e.stopPropagation(); showModal(l.name, l.bio); });
+            grid.appendChild(card);
+        });
+        function showModal(n, b) { document.getElementById('modal-name').innerText = n; document.getElementById('modal-bio').innerText = b; document.getElementById('modal').classList.remove('hidden'); }
+    </script>
+</body>
+</html>
