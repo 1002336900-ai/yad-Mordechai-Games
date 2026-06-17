@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #fdf6e3; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .game-wrapper { width: 95vw; height: 90vh; display: flex; align-items: center; justify-content: center; gap: 40px; }
+        
+        .silhouette { width: 320px; height: 320px; border: 8px solid #4a3728; background: #333; display: flex; align-items: center; justify-content: center; transition: all 1s ease; filter: grayscale(100%) brightness(0%); border-radius: 20px; overflow: hidden; }
+        .silhouette.revealed { filter: grayscale(0%) brightness(100%); background: white; transform: scale(1.05); box-shadow: 0 0 30px rgba(0,0,0,0.3); }
+        #leader-img { width: 100%; height: 100%; object-fit: contain; }
+
+        .values-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .value-btn { background: #d97706; color: white; padding: 12px 20px; border-radius: 12px; cursor: pointer; text-align: center; font-weight: bold; font-size: 1.1rem; transition: 0.3s; user-select: none; }
+        .value-btn.correct { background: #059669; }
+        .value-btn.wrong { background: #dc2626; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        .next-btn { background: #1e40af; color: white; padding: 15px 40px; border-radius: 50px; font-size: 1.5rem; cursor: pointer; display: none; margin-top: 15px; }
+        
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; animation: fall 2s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(-100vh) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container" class="game-wrapper">
+    <div id="values-grid" class="values-grid"></div>
+    <div class="text-center">
+        <div id="silhouette" class="silhouette">
+            <img id="leader-img" src="" style="display:none;">
+        </div>
+        <h2 id="leader-name" class="mt-4 text-3xl font-bold text-gray-700">???</h2>
+        <button id="next-btn" class="next-btn" onclick="nextLeader()">המנהיג הבא >></button>
+    </div>
+</div>
+
+<script>
+    const leaders = [
+        { id: "13", name: "חיים ויצמן", correct: ["חזון", "דיפלומטיה"], distractors: ["אומץ", "פשרנות", "יצירתיות"] },
+        { id: "8", name: "דוד בן גוריון", correct: ["חזון", "נחישות"], distractors: ["ענווה", "פשרנות", "יצירתיות"] },
+        { id: "7", name: "גולדה מאיר", correct: ["אחריות", "ענווה"], distractors: ["חזון", "יצירתיות", "אומץ"] },
+        { id: "3", name: "אליעזר קפלן", correct: ["אחריות", "יצירתיות"], distractors: ["אומץ", "פשרנות", "ענווה"] },
+        { id: "1", name: "יצחק שדה", correct: ["אומץ", "נחישות"], distractors: ["פשרנות", "יצירתיות", "אחריות"] },
+        { id: "15", name: "יגאל ידין", correct: ["אחריות", "נחישות"], distractors: ["ענווה", "חזון", "פשרנות"] },
+        { id: "16", name: "יוסף טרומפלדור", correct: ["אומץ", "הקרבה"], distractors: ["יצירתיות", "חזון", "ענווה"] },
+        { id: "6", name: "יהושוע חנקין", correct: ["נחישות", "חזון"], distractors: ["אחריות", "אומץ", "פשרנות"] },
+        { id: "2", name: "אליעזר בן יהודה", correct: ["חזון", "נחישות"], distractors: ["אחריות", "פשרנות", "אומץ"] },
+        { id: "11", name: "לאה גולדברג", correct: ["יצירתיות", "ענווה"], distractors: ["נחישות", "אומץ", "אחריות"] },
+        { id: "10", name: "נתן אלתרמן", correct: ["יצירתיות", "חזון"], distractors: ["פשרנות", "ענווה", "נחישות"] },
+        { id: "14", name: "חיים נחמן ביאליק", correct: ["חזון", "ענווה"], distractors: ["אומץ", "אחריות", "יצירתיות"] }
+    ];
+
+    let currentIdx = 0;
+    let correctFound = 0;
+
+    function triggerConfetti() {
+        for(let i=0; i<60; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = ['#f44336', '#2196f3', '#4caf50', '#ffeb3b', '#9c27b0'][Math.floor(Math.random()*5)];
+            c.style.animationDelay = Math.random() * 1 + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+    }
+
+    function initGame() {
+        const l = leaders[currentIdx];
+        document.getElementById('leader-name').innerText = "???";
+        document.getElementById('silhouette').classList.remove('revealed');
+        document.getElementById('leader-img').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        correctFound = 0;
+
+        const grid = document.getElementById('values-grid');
+        grid.innerHTML = '';
+        
+        const allVals = [...new Set([...l.correct, ...l.distractors])].sort(() => Math.random() - 0.5);
+        
+        allVals.forEach(val => {
+            const btn = document.createElement('div');
+            btn.className = 'value-btn';
+            btn.innerText = val;
+            btn.onclick = () => checkValue(val, btn, l);
+            grid.appendChild(btn);
+        });
+    }
+
+    function checkValue(val, btn, l) {
+        if (l.correct.includes(val)) {
+            btn.classList.add('correct');
+            btn.onclick = null;
+            correctFound++;
+            if (correctFound === l.correct.length) reveal();
+        } else {
+            btn.classList.add('wrong');
+            setTimeout(() => btn.classList.remove('wrong'), 500);
+        }
+    }
+
+    function reveal() {
+        const l = leaders[currentIdx];
+        document.getElementById('silhouette').classList.add('revealed');
+        const img = document.getElementById('leader-img');
+        
+        img.src = `https://1002336900-ai.github.io/yad-Mordechai-Games/leaders/images/${l.id}.jpeg`;
+        img.style.display = 'block';
+        document.getElementById('leader-name').innerText = l.name;
+        document.getElementById('next-btn').style.display = 'inline-block';
+        triggerConfetti();
+    }
+
+    function nextLeader() {
+        currentIdx++;
+        // בדיקה אם הגענו לסוף
+        if (currentIdx < leaders.length) {
+            initGame();
+        } else {
+            // הצגת מסך הסיום
+            document.getElementById('game-container').innerHTML = `
+                <div class="text-center p-10 bg-white rounded-2xl shadow-2xl border-4 border-amber-600">
+                    <h1 class="text-5xl font-bold text-green-700 mb-6">כל הכבוד! הצלחתם!</h1>
+                    <p class="text-2xl text-gray-700 max-w-lg mb-8 leading-relaxed">
+                        גיליתם את ה-DNA של המנהיגים שלנו. הערכים שפגשתם – חזון, אחריות, נחישות, ענווה – הם אבני הבניין שהקימו את המדינה שלנו וממשיכים להוביל אותנו עד היום.
+                    </p>
+                    <button class="bg-blue-700 text-white px-8 py-4 rounded-full text-2xl font-bold hover:bg-blue-800 transition" onclick="location.reload()">משחק חדש</button>
+                </div>
+            `;
+        }
+    }
+
+    initGame();
+</script>
+</body>
+</html>
