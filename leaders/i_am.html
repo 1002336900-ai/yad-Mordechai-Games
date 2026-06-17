@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; background: #064e3b; /* ירוק עמוק - רקע חדש */ font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .game-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 80vw; max-width: 800px; text-align: center; }
+        .option-btn { background: #d97706; color: white; padding: 20px; border-radius: 15px; cursor: pointer; font-size: 1.2rem; margin: 10px; transition: 0.3s; }
+        .option-btn:hover { background: #b45309; transform: scale(1.02); }
+        
+        .hidden-screen { display: none !important; }
+
+        /* אפקט זוהר למנהיג */
+        .glow-result { 
+            animation: pulse-glow 2s infinite;
+            text-shadow: 0 0 20px #fbbf24, 0 0 30px #f59e0b;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .confetti { position: absolute; width: 10px; height: 10px; background-color: #f00; animation: fall 3s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(-100vh) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container" class="game-card">
+    <!-- מסך התחלה -->
+    <div id="start-screen">
+        <h1 class="text-4xl font-bold text-emerald-900 mb-6">מנהיגות בדרך שלך!</h1>
+        <p class="text-xl mb-4">איך קוראים לך?</p>
+        <input type="text" id="student-name" placeholder="הכנס שם כאן..." class="border-2 border-emerald-600 rounded-lg p-3 w-64 text-center mb-6 text-xl">
+        <br>
+        <button class="bg-blue-700 text-white px-10 py-4 rounded-full text-2xl font-bold hover:bg-blue-800 transition" onclick="startNewStudent()">מתחילים!</button>
+    </div>
+
+    <!-- מסך משחק -->
+    <div id="game-screen" class="hidden-screen">
+        <h2 id="question-text" class="text-2xl font-bold mb-8">שאלה?</h2>
+        <div id="options-container"></div>
+    </div>
+
+    <!-- מסך תוצאה -->
+    <div id="result-screen" class="hidden-screen">
+        <h2 id="result-greeting" class="text-3xl font-bold text-gray-700 mb-4"></h2>
+        <h1 id="result-title" class="text-6xl font-extrabold text-amber-500 mb-6 glow-result"></h1>
+        <p id="result-desc" class="text-xl mb-8 font-semibold"></p>
+        <button class="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-700 transition" onclick="nextStudent()">לתלמיד/ה הבא/ה >></button>
+        <button class="bg-gray-500 text-white px-8 py-3 rounded-full text-lg font-bold mr-4 hover:bg-gray-600 transition" onclick="showSummary()">סיום וסיכום קבוצה</button>
+    </div>
+
+    <!-- מסך סיכום -->
+    <div id="summary-screen" class="hidden-screen">
+        <h1 class="text-4xl font-bold mb-6 text-emerald-900">סיכום המנהיגים בקבוצה שלנו</h1>
+        <div id="results-list" class="grid grid-cols-2 gap-4 text-right mb-6"></div>
+        <button class="bg-red-600 text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-red-700 transition" onclick="location.reload()">משחק חדש לקבוצה חדשה</button>
+    </div>
+</div>
+
+<script>
+    const dilemmas = [
+        { q: "הקבוצה נתקעה במשימה מסובכת. מה תעשה?", a1: { text: "אקשיב לכולם ואנסה לאחד את הדעות", type: "מנהיג מאחד" }, a2: { text: "אקח פיקוד ואקבע תוכנית פעולה ברורה", type: "מנהיג אסטרטג" } },
+        { q: "יש הזדמנות לקחת פרויקט חדש ומאתגר. מה הגישה שלך?", a1: { text: "בודק נתונים וסיכונים לפני שמחליט", type: "מנהיג אסטרטג" }, a2: { text: "הולך עם האינטואיציה והתשוקה", type: "מנהיג יוזם" } },
+        { q: "מישהו בקבוצה נפגע מביקורת. איך תגיב?", a1: { text: "אדבר איתו ואעזור לו להתחזק", type: "מנהיג רגשי" }, a2: { text: "אזכיר לו שהתוצאות הן מה שחשוב", type: "מנהיג אסטרטג" } },
+        { q: "מה הדבר הכי חשוב כדי להצליח?", a1: { text: "עבודת צוות והרמוניה", type: "מנהיג מאחד" }, a2: { text: "חזון ברור ותוצאות", type: "מנהיג יוזם" } },
+        { q: "מציעים לך להיות אחראי על משהו חדש. מה תרגיש?", a1: { text: "התרגשות, אני אוהב לפרוץ דרך", type: "מנהיג יוזם" }, a2: { text: "סקרנות, איך אפשר להפוך את זה למצוין?", type: "מנהיג אסטרטג" } },
+        { q: "הצוות לא מסכים על כיוון הפעולה. מה תעשה?", a1: { text: "אעזור לכולם להגיע לפשרה", type: "מנהיג מאחד" }, a2: { text: "אציע פתרון יצירתי שהם לא חשבו עליו", type: "מנהיג יוזם" } },
+        { q: "מה מתאר אותך הכי טוב ברגעי לחץ?", a1: { text: "נשאר רגוע וקשוב לאחרים", type: "מנהיג רגשי" }, a2: { text: "מתמקד במטרה ולא עוצר עד שמשיג", type: "מנהיג יוזם" } },
+        { q: "כשאתה מסתכל על העתיד, מה אתה רואה?", a1: { text: "אנשים מאושרים ומחוברים", type: "מנהיג רגשי" }, a2: { text: "הישגים גדולים ושינוי המציאות", type: "מנהיג יוזם" } },
+        { q: "מישהו מבקש עזרה במשהו שלא קשור למשימה. מה תעשה?", a1: { text: "אעצור הכל ואעזור לו, אנשים קודמים", type: "מנהיג מאחד" }, a2: { text: "אעזור לו, אבל אדאג שזה לא יפגע בלו\"ז", type: "מנהיג אסטרטג" } },
+        { q: "מה הכוח הכי גדול שלך?", a1: { text: "להבין מה אנשים מרגישים", type: "מנהיג רגשי" }, a2: { text: "להוביל תהליכים עד הסוף", type: "מנהיג אסטרטג" } }
+    ];
+
+    let currentStudentName = "";
+    let currentStudentDilemmas = [];
+    let currentDilemmaIdx = 0;
+    let scores = { "מנהיג מאחד": 0, "מנהיג אסטרטג": 0, "מנהיג יוזם": 0, "מנהיג רגשי": 0 };
+    let groupResults = [];
+
+    function triggerConfetti() {
+        for(let i=0; i<100; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.backgroundColor = ['#f44336', '#fbbf24', '#4caf50', '#2196f3', '#9c27b0'][Math.floor(Math.random()*5)];
+            c.style.animationDelay = Math.random() * 2 + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 4000);
+        }
+    }
+
+    function startNewStudent() {
+        const nameInput = document.getElementById('student-name');
+        currentStudentName = nameInput.value || "תלמיד/ה";
+        nameInput.value = ""; // איפוס לשם הבא
+        
+        document.getElementById('start-screen').classList.add('hidden-screen');
+        document.getElementById('game-screen').classList.remove('hidden-screen');
+        
+        currentStudentDilemmas = [...dilemmas].sort(() => 0.5 - Math.random()).slice(0, 3);
+        currentDilemmaIdx = 0;
+        scores = { "מנהיג מאחד": 0, "מנהיג אסטרטג": 0, "מנהיג יוזם": 0, "מנהיג רגשי": 0 };
+        showDilemma();
+    }
+
+    function showDilemma() {
+        const d = currentStudentDilemmas[currentDilemmaIdx];
+        document.getElementById('question-text').innerText = d.q;
+        const cont = document.getElementById('options-container');
+        cont.innerHTML = '';
+        
+        [d.a1, d.a2].forEach(opt => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => selectOption(opt.type);
+            cont.appendChild(btn);
+        });
+    }
+
+    function selectOption(type) {
+        scores[type]++;
+        currentDilemmaIdx++;
+        if (currentDilemmaIdx < 3) {
+            showDilemma();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        const winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        groupResults.push({ name: currentStudentName, type: winner });
+        
+        document.getElementById('game-screen').classList.add('hidden-screen');
+        document.getElementById('result-screen').classList.remove('hidden-screen');
+        document.getElementById('result-greeting').innerText = `כל הכבוד ${currentStudentName}!`;
+        document.getElementById('result-title').innerText = winner;
+        document.getElementById('result-desc').innerText = "יש לך יכולת השפעה מדהימה שמשלבת את הערכים של " + winner + ".";
+    }
+
+    function nextStudent() {
+        document.getElementById('result-screen').classList.add('hidden-screen');
+        document.getElementById('start-screen').classList.remove('hidden-screen');
+    }
+
+    function showSummary() {
+        document.getElementById('result-screen').classList.add('hidden-screen');
+        document.getElementById('summary-screen').classList.remove('hidden-screen');
+        triggerConfetti(); // קונפטי כשמציגים את הקבוצה
+        const list = document.getElementById('results-list');
+        list.innerHTML = groupResults.map(res => `<div class='p-3 bg-gray-100 rounded border border-gray-200'><b>${res.name}:</b> ${res.type}</div>`).join('');
+    }
+</script>
+</body>
+</html>
